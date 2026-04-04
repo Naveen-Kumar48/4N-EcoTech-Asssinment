@@ -5,10 +5,38 @@ import { useAuth } from '../context/AuthContext';
 import ScreenShell from '../components/ScreenShell';
 import { categoryColors, colors, radius, shadows, spacing } from '../theme';
 
+// Defined outside to prevent remount flicker on every state change
+function AppointmentHeader({ successMessage, loading, count, onBack }) {
+  return (
+    <View style={styles.headerWrap}>
+      {successMessage ? (
+        <View style={styles.successBanner}>
+          <Text style={styles.successBannerText}>{successMessage}</Text>
+        </View>
+      ) : null}
+      <Pressable
+        onPress={onBack}
+        style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.backButtonText}>← Back</Text>
+      </Pressable>
+      <Text style={styles.headerTitle}>My Appointments</Text>
+      <Text style={styles.headerSubtitle}>
+        {loading
+          ? 'Loading...'
+          : count > 0
+          ? `You have ${count} upcoming booking${count > 1 ? 's' : ''}.`
+          : 'No bookings yet. Browse providers to get started.'}
+      </Text>
+    </View>
+  );
+}
+
 export default function AppointmentsScreen({ navigation, route }) {
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState(null);
   const successMessage = route?.params?.successMessage;
 
   const loadAppointments = useCallback(async () => {
@@ -21,54 +49,30 @@ export default function AppointmentsScreen({ navigation, route }) {
   useEffect(() => { loadAppointments(); }, [loadAppointments]);
 
   async function handleCancel(id) {
-    Alert.alert(
-      'Cancel Appointment',
-      'Are you sure you want to cancel this booking?',
-      [
-        { text: 'Keep It', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            await cancelAppointment(id);
-            await loadAppointments();
-          },
-        },
-      ]
-    );
+    if (cancellingId) return;
+
+    try {
+      setCancellingId(id);
+      await cancelAppointment(id);
+      await loadAppointments();
+      Alert.alert('Cancelled', 'The appointment has been removed.');
+    } finally {
+      setCancellingId(null);
+    }
   }
 
-  function Header() {
-    return (
-      <View style={styles.headerWrap}>
-        {successMessage ? (
-          <View style={styles.successBanner}>
-            <Text style={styles.successBannerText}>{successMessage}</Text>
-          </View>
-        ) : null}
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>My Appointments</Text>
-        <Text style={styles.headerSubtitle}>
-          {loading
-            ? 'Loading...'
-            : appointments.length > 0
-            ? `You have ${appointments.length} upcoming booking${appointments.length > 1 ? 's' : ''}.`
-            : 'No bookings yet. Browse providers to get started.'}
-        </Text>
-      </View>
-    );
-  }
+  const headerProps = {
+    successMessage,
+    loading,
+    count: appointments.length,
+    onBack: () => navigation.goBack(),
+  };
 
   if (loading) {
     return (
       <ScreenShell>
         <View style={styles.list}>
-          <Header />
+          <AppointmentHeader {...headerProps} />
           <View style={styles.loadingWrap}>
             <Text style={styles.loadingText}>Loading appointments...</Text>
           </View>
@@ -81,7 +85,7 @@ export default function AppointmentsScreen({ navigation, route }) {
     return (
       <ScreenShell>
         <View style={styles.list}>
-          <Header />
+          <AppointmentHeader {...headerProps} />
           <View style={styles.emptyCard}>
             <Text style={styles.emptyEmoji}>📅</Text>
             <Text style={styles.emptyTitle}>No appointments yet</Text>
@@ -106,12 +110,12 @@ export default function AppointmentsScreen({ navigation, route }) {
         data={appointments}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
-        ListHeaderComponent={Header}
+        ListHeaderComponent={<AppointmentHeader {...headerProps} />}
         renderItem={({ item }) => {
           const catColor = categoryColors[item.category] || { bg: colors.primarySoft, text: colors.text };
+          const isCancelling = cancellingId === item.id;
           return (
             <View style={styles.card}>
-              {/* Card header: category + confirmed badge */}
               <View style={styles.cardHeader}>
                 <View style={[styles.categoryBadge, { backgroundColor: catColor.bg }]}>
                   <Text style={[styles.categoryBadgeText, { color: catColor.text }]}>
@@ -125,7 +129,6 @@ export default function AppointmentsScreen({ navigation, route }) {
 
               <Text style={styles.provider}>{item.providerName}</Text>
 
-              {/* Date + Time tiles */}
               <View style={styles.detailsGrid}>
                 <View style={styles.detailItem}>
                   <Text style={styles.detailIcon}>📅</Text>
@@ -145,9 +148,16 @@ export default function AppointmentsScreen({ navigation, route }) {
 
               <Pressable
                 onPress={() => handleCancel(item.id)}
-                style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+                disabled={isCancelling}
+                style={({ pressed }) => [
+                  styles.cancelButton,
+                  isCancelling && styles.cancelButtonDisabled,
+                  pressed && !isCancelling && styles.pressed,
+                ]}
               >
-                <Text style={styles.cancelButtonText}>Cancel Appointment</Text>
+                <Text style={styles.cancelButtonText}>
+                  {isCancelling ? 'Cancelling...' : 'Cancel Appointment'}
+                </Text>
               </Pressable>
             </View>
           );
@@ -331,6 +341,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#FECACA',
+  },
+  cancelButtonDisabled: {
+    opacity: 0.5,
   },
   cancelButtonText: {
     color: colors.danger,

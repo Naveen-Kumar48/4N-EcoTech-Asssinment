@@ -61,7 +61,7 @@ export default function BookingScreen({ route, navigation }) {
       providerName: provider.name,
       category: provider.category,
     });
-    setLoading(false);
+    // Navigate first — screen unmounts so no need to reset loading state
     navigation.navigate('Appointments', { successMessage: 'Your appointment has been saved! 🎉' });
   }
 
