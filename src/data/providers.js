@@ -1,0 +1,32 @@
+export const providers = [
+  {
+    id: '1',
+    name: 'John Barber',
+    category: 'Salon',
+    rating: 4.9,
+    price: 'From $15',
+    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
+    bio: 'Classic cuts, beard styling, and quick grooming sessions.',
+    slots: ['10:00 AM', '11:00 AM', '2:00 PM', '4:30 PM'],
+  },
+  {
+    id: '2',
+    name: 'Maya Wellness',
+    category: 'Massage',
+    rating: 4.8,
+    price: 'From $30',
+    image: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=800&q=80',
+    bio: 'Relaxing home massage sessions and recovery-focused care.',
+    slots: ['9:00 AM', '1:00 PM', '3:00 PM', '6:00 PM'],
+  },
+  {
+    id: '3',
+    name: 'Asha Cleaners',
+    category: 'Home Cleaning',
+    rating: 4.7,
+    price: 'From $22',
+    image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&w=800&q=80',
+    bio: 'Reliable house cleaning with flexible time slots.',
+    slots: ['8:00 AM', '12:00 PM', '3:30 PM', '5:00 PM'],
+  },
+];
