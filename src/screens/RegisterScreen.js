@@ -1,49 +1,99 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { colors, radius, shadows, spacing } from '../theme';
 import ScreenShell from '../components/ScreenShell';
 
 export default function RegisterScreen({ navigation }) {
   const { signUp } = useAuth();
-  const [name, setName] = useState('Test User');
-  const [email, setEmail] = useState('test@gmail.com');
-  const [password, setPassword] = useState('123456');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
-    if (!name.trim() || !email.trim() || password.length < 6) {
-      Alert.alert('Invalid details', 'Use a name, email, and a password with at least 6 characters.');
-      return;
-    }
+    setError('');
+    if (!name.trim()) { setError('Full name is required.'); return; }
+    if (!email.trim() || !email.includes('@')) { setError('Enter a valid email address.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
-    const result = await signUp({ name, email, password });
+    const result = await signUp({ name: name.trim(), email: email.trim(), password });
     setLoading(false);
 
     if (!result.ok) {
-      Alert.alert('Registration failed', 'An account with that email already exists.');
+      setError('An account with that email already exists.');
     }
   }
 
   return (
     <ScreenShell>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.badge}>Create account</Text>
-        <Text style={styles.title}>A faster way to book.</Text>
-        <Text style={styles.subtitle}>Set up a local demo account and start booking services.</Text>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.badge}>📅 BookEase</Text>
+        <Text style={styles.title}>Create account</Text>
+        <Text style={styles.subtitle}>Register to start booking services instantly.</Text>
 
         <View style={styles.card}>
-          <TextInput value={name} onChangeText={setName} placeholder="Full name" placeholderTextColor={colors.softText} style={styles.input} />
-          <TextInput value={email} onChangeText={setEmail} placeholder="Email" placeholderTextColor={colors.softText} autoCapitalize="none" keyboardType="email-address" style={styles.input} />
-          <TextInput value={password} onChangeText={setPassword} placeholder="Password" placeholderTextColor={colors.softText} secureTextEntry style={styles.input} />
+          <Text style={styles.fieldLabel}>Full Name</Text>
+          <TextInput
+            value={name}
+            onChangeText={(v) => { setName(v); setError(''); }}
+            placeholder="Jane Smith"
+            placeholderTextColor={colors.softText}
+            style={styles.input}
+          />
 
-          <Pressable onPress={handleRegister} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}>
-            <Text style={styles.primaryButtonText}>{loading ? 'Creating...' : 'Create account'}</Text>
+          <Text style={styles.fieldLabel}>Email</Text>
+          <TextInput
+            value={email}
+            onChangeText={(v) => { setEmail(v); setError(''); }}
+            placeholder="you@example.com"
+            placeholderTextColor={colors.softText}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            style={styles.input}
+          />
+
+          <Text style={styles.fieldLabel}>Password</Text>
+          <View style={styles.passwordWrap}>
+            <TextInput
+              value={password}
+              onChangeText={(v) => { setPassword(v); setError(''); }}
+              placeholder="Min. 6 characters"
+              placeholderTextColor={colors.softText}
+              secureTextEntry={!showPassword}
+              style={[styles.input, styles.passwordInput]}
+            />
+            <Pressable onPress={() => setShowPassword((s) => !s)} style={styles.eyeBtn}>
+              <Text style={styles.eyeText}>{showPassword ? '🙈' : '👁️'}</Text>
+            </Pressable>
+          </View>
+
+          <Text style={styles.fieldLabel}>Confirm Password</Text>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={(v) => { setConfirmPassword(v); setError(''); }}
+            placeholder="Re-enter password"
+            placeholderTextColor={colors.softText}
+            secureTextEntry={!showPassword}
+            style={[styles.input, confirmPassword && confirmPassword !== password && styles.inputError]}
+          />
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <Pressable
+            onPress={handleRegister}
+            style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.primaryButtonText}>{loading ? 'Creating...' : 'Create Account'}</Text>
           </Pressable>
 
           <Pressable onPress={() => navigation.goBack()}>
-            <Text style={styles.link}>Back to sign in</Text>
+            <Text style={styles.link}>Already have an account? Sign in →</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -59,32 +109,37 @@ const styles = StyleSheet.create({
   },
   badge: {
     color: colors.accent,
-    textTransform: 'uppercase',
     fontWeight: '800',
-    letterSpacing: 1.1,
-    fontSize: 12,
+    fontSize: 18,
+    marginBottom: 4,
   },
   title: {
-    marginTop: 10,
-    fontSize: 38,
-    lineHeight: 44,
+    marginTop: 6,
+    fontSize: 36,
+    lineHeight: 42,
     color: colors.text,
     fontWeight: '900',
   },
   subtitle: {
-    marginTop: 12,
+    marginTop: 8,
     color: colors.muted,
     fontSize: 16,
     lineHeight: 24,
   },
   card: {
-    marginTop: 28,
+    marginTop: 24,
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.xl,
     padding: 22,
     borderWidth: 1,
     borderColor: colors.border,
     ...shadows.card,
+  },
+  fieldLabel: {
+    color: colors.text,
+    fontWeight: '700',
+    fontSize: 13,
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
@@ -97,15 +152,40 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: colors.surface,
   },
+  inputError: {
+    borderColor: colors.danger,
+  },
+  passwordWrap: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingRight: 48,
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+  },
+  eyeText: {
+    fontSize: 18,
+  },
+  errorText: {
+    color: colors.danger,
+    fontWeight: '700',
+    fontSize: 13,
+    marginBottom: 12,
+    marginTop: -6,
+  },
   primaryButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: radius.lg,
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 4,
   },
   pressed: {
-    opacity: 0.9,
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }],
   },
   primaryButtonText: {
     color: '#F8FAFC',
@@ -117,5 +197,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 18,
     fontWeight: '700',
+    fontSize: 14,
   },
 });

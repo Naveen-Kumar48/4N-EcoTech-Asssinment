@@ -1,54 +1,87 @@
-import React, { useMemo } from 'react';
-import { Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Image, Pressable, ScrollView, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import SlotButton from '../components/SlotButton';
 import { providers } from '../data/providers';
 import ScreenShell from '../components/ScreenShell';
-import { colors, radius, shadows, spacing } from '../theme';
+import { categoryColors, colors, radius, shadows, spacing } from '../theme';
 
 export default function ProviderDetailsScreen({ route, navigation }) {
   const { providerId } = route.params;
   const provider = useMemo(() => providers.find((item) => item.id === providerId), [providerId]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
   if (!provider) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>Provider not found.</Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <Text style={{ padding: 24, color: colors.danger }}>Provider not found.</Text>
       </SafeAreaView>
     );
   }
 
+  const catColor = categoryColors[provider.category] || { bg: colors.primarySoft, text: colors.text };
+
   return (
     <ScreenShell>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Back</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Back */}
+        <Pressable onPress={() => navigation.goBack()} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+          <Text style={styles.backButtonText}>← Back</Text>
         </Pressable>
+
+        {/* Hero image */}
         <View style={styles.imageWrap}>
           <Image source={{ uri: provider.image }} style={styles.image} />
           <View style={styles.imageOverlay} />
-          <View style={styles.pill}>
-            <Text style={styles.pillText}>{provider.rating} rating</Text>
+          <View style={[styles.categoryPill, { backgroundColor: catColor.bg }]}>
+            <Text style={[styles.categoryPillText, { color: catColor.text }]}>{provider.category}</Text>
+          </View>
+          <View style={styles.ratingPill}>
+            <Text style={styles.ratingPillText}>★ {provider.rating} · {provider.reviews} reviews</Text>
           </View>
         </View>
+
+        {/* Info card */}
         <View style={styles.card}>
-          <Text style={styles.category}>{provider.category}</Text>
-          <Text style={styles.name}>{provider.name}</Text>
-          <Text style={styles.meta}>{provider.rating} rating · {provider.price}</Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{provider.name}</Text>
+            <View style={[styles.availBadge, { backgroundColor: provider.available ? '#DCFCE7' : '#FEE2E2' }]}>
+              <Text style={[styles.availText, { color: provider.available ? colors.success : colors.danger }]}>
+                {provider.available ? '● Available' : '● Fully Booked'}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.price}>{provider.price} per session</Text>
           <Text style={styles.bio}>{provider.bio}</Text>
 
-          <Text style={styles.sectionTitle}>Available slots</Text>
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          <Text style={styles.sectionTitle}>Choose a time slot</Text>
           <View style={styles.slotRow}>
             {provider.slots.map((slot) => (
               <SlotButton
                 key={slot}
                 label={slot}
-                onPress={() => navigation.navigate('Booking', { providerId: provider.id, slot })}
+                selected={selectedSlot === slot}
+                onPress={() => setSelectedSlot(slot)}
               />
             ))}
           </View>
 
-          <Pressable onPress={() => navigation.navigate('Booking', { providerId: provider.id })} style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Continue to booking</Text>
+          {selectedSlot && (
+            <View style={styles.selectedInfo}>
+              <Text style={styles.selectedInfoText}>Selected: {selectedSlot}</Text>
+            </View>
+          )}
+
+          <Pressable
+            onPress={() => navigation.navigate('Booking', { providerId: provider.id, slot: selectedSlot || provider.slots[0] })}
+            style={({ pressed }) => [styles.primaryButton, !provider.available && styles.disabledButton, pressed && styles.pressed]}
+            disabled={!provider.available}
+          >
+            <Text style={styles.primaryButtonText}>
+              {provider.available ? 'Continue to Booking →' : 'Currently Unavailable'}
+            </Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -59,13 +92,13 @@ export default function ProviderDetailsScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   content: {
     padding: spacing.lg,
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 14,
     paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
@@ -74,6 +107,10 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: colors.text,
     fontWeight: '800',
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.97 }],
   },
   imageWrap: {
     borderRadius: radius.xl,
@@ -86,20 +123,35 @@ const styles = StyleSheet.create({
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(16, 33, 51, 0.14)',
+    backgroundColor: 'rgba(16,33,51,0.22)',
   },
-  pill: {
+  categoryPill: {
     position: 'absolute',
+    top: 14,
     left: 14,
-    bottom: 14,
-    backgroundColor: 'rgba(255, 253, 248, 0.92)',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: radius.pill,
   },
-  pillText: {
+  categoryPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  ratingPill: {
+    position: 'absolute',
+    bottom: 14,
+    left: 14,
+    backgroundColor: 'rgba(255,253,248,0.92)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: radius.pill,
+  },
+  ratingPillText: {
     color: colors.text,
     fontWeight: '800',
+    fontSize: 13,
   },
   card: {
     marginTop: 16,
@@ -110,54 +162,81 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     ...shadows.card,
   },
-  category: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   name: {
-    marginTop: 8,
-    fontSize: 28,
-    lineHeight: 34,
+    flex: 1,
+    fontSize: 26,
+    lineHeight: 32,
     color: colors.text,
     fontWeight: '900',
   },
-  meta: {
-    color: colors.muted,
-    marginTop: 8,
-    marginBottom: 14,
+  availBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    marginTop: 4,
+  },
+  availText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  price: {
+    color: colors.accent,
+    fontWeight: '800',
+    marginTop: 6,
+    fontSize: 15,
   },
   bio: {
-    color: colors.text,
+    color: colors.muted,
     lineHeight: 22,
+    marginTop: 10,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 18,
   },
   sectionTitle: {
-    marginTop: 22,
-    marginBottom: 12,
-    fontSize: 18,
+    fontSize: 17,
     color: colors.text,
     fontWeight: '800',
+    marginBottom: 12,
   },
   slotRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 10,
   },
+  selectedInfo: {
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.lg,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+  },
+  selectedInfoText: {
+    color: colors.accent,
+    fontWeight: '800',
+  },
   primaryButton: {
-    marginTop: 10,
+    marginTop: 6,
     backgroundColor: colors.primary,
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: radius.lg,
     alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: colors.muted,
   },
   primaryButtonText: {
     color: '#F8FAFC',
     fontWeight: '800',
-  },
-  error: {
-    padding: 24,
-    color: colors.danger,
+    fontSize: 15,
   },
 });

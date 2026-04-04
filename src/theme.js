@@ -14,6 +14,20 @@ export const colors = {
   danger: '#B91C1C',
   dangerSoft: '#FEE2E2',
   success: '#0F766E',
+  successSoft: '#CCFBF1',
+};
+
+export const categoryColors = {
+  Salon:      { bg: '#FEF3C7', text: '#92400E' },
+  Massage:    { bg: '#EDE9FE', text: '#5B21B6' },
+  Cleaning:   { bg: '#DBEAFE', text: '#1E40AF' },
+  Fitness:    { bg: '#DCFCE7', text: '#166534' },
+  Dental:     { bg: '#E0F2FE', text: '#0369A1' },
+  Beauty:     { bg: '#FCE7F3', text: '#9D174D' },
+  Plumbing:   { bg: '#FEE2E2', text: '#991B1B' },
+  Tutoring:   { bg: '#FEF9C3', text: '#854D0E' },
+  Veterinary: { bg: '#F0FDF4', text: '#14532D' },
+  Electrical: { bg: '#FFF7ED', text: '#9A3412' },
 };
 
 export const spacing = {
@@ -49,4 +63,4 @@ export const shadows = {
   },
 };
 
-export const theme = { colors, spacing, radius, shadows };
+export const theme = { colors, spacing, radius, shadows, categoryColors };
