@@ -1,3 +1,5 @@
+import { scale } from './utils/responsive';
+
 export const colors = {
   background: '#F6EFE4',
   backgroundAlt: '#EDE3D2',
@@ -31,18 +33,18 @@ export const categoryColors = {
 };
 
 export const spacing = {
-  xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 24,
-  xl: 32,
+  xs: scale(6),
+  sm: scale(10),
+  md: scale(16),
+  lg: scale(24),
+  xl: scale(32),
 };
 
 export const radius = {
-  sm: 12,
-  md: 18,
-  lg: 24,
-  xl: 30,
+  sm: scale(12),
+  md: scale(18),
+  lg: scale(24),
+  xl: scale(30),
   pill: 999,
 };
 

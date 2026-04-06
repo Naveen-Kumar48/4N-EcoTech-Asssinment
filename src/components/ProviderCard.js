@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 190,
+    aspectRatio: 16 / 10,
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,

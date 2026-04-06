@@ -176,6 +176,7 @@ const styles = StyleSheet.create({
   },
   heroActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 16,
   },

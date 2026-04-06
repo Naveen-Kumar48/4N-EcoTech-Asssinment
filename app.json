@@ -8,6 +8,9 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package": "com.appointmentbooking.app"
     }
   }
 }

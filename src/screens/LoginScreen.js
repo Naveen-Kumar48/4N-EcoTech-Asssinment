@@ -102,16 +102,16 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 6,
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 28,
+    lineHeight: 34,
     color: colors.text,
     fontWeight: '900',
   },
   subtitle: {
     marginTop: 8,
     color: colors.muted,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 22,
   },
   demoHint: {
     marginTop: 16,
